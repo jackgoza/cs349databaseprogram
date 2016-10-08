@@ -13,6 +13,7 @@ public class bankAccount {
     protected int idNumber = 0;
     protected String accountName = "";
     protected int balance = 0;
+    protected boolean changeFlag = false;
 
     public bankAccount(int newID, String newName, int newMoney) {
 	idNumber = newID;
@@ -27,6 +28,11 @@ public class bankAccount {
 
 	return combinedString;
 
+    }
+
+    protected String createSQLUpdateString() {
+	String query = "UPDATE Accounts SET Balance = " + balance + " where AcctID = " + idNumber;
+	return query;
     }
 
     protected Object[] provideData() {

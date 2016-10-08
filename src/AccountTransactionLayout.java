@@ -18,7 +18,8 @@ public class AccountTransactionLayout extends JFrame {
     private Object[][] data;
 
     public AccountTransactionLayout(accountManager accountHub) {
-	data = accountHub.accountData;
+
+	data = accountHub.displayData;
 
 	Container contentPane = getContentPane();
 	contentPane.setLayout(new GridBagLayout());
@@ -116,14 +117,33 @@ public class AccountTransactionLayout extends JFrame {
 
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
+		String toString, fromString, amountString;
+		int to, from, amount;
+		Boolean transferred;
 
-		Object[][] newData = {
-		    {new Integer(3), "Savings", new Integer(400)},
-		    {new Integer(4), "Checking", new Integer(370)}};
-		// Example of how to change the table model of an
-		//   existing JTable
-		table.setModel(new DefaultTableModel(newData, columnNames));
+		try {
+		    toString = toField.getText();
+		    fromString = fromField.getText();
+		    amountString = amountField.getText();
 
+		    to = Integer.parseInt(toString);
+		    from = Integer.parseInt(fromString);
+		    amount = Integer.parseInt(amountString);
+
+		    transferred = accountHub.transferFunds(to - 1, from - 1, amount);
+
+		    if (transferred) {
+			table.setModel(new DefaultTableModel(accountHub.displayData, columnNames));
+		    }
+		    else {
+			JOptionPane.showMessageDialog(null, "Invalid transfer", "Error",
+				JOptionPane.ERROR_MESSAGE);
+		    }
+		}
+		catch (NumberFormatException NFE) {
+		    JOptionPane.showMessageDialog(null, e.toString(), "Error",
+			    JOptionPane.ERROR_MESSAGE);
+		}
 	    }
 
 	});

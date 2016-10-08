@@ -14,13 +14,15 @@ public class accountManager {
 
     private Connection con;
     private Statement stmt;
-    public Object[] accountData;
+    private int numberOfAccounts;
+    private bankAccount[] accountData;
+    public Object[][] displayData;
 
     // Load class and create a connection to the database
     public accountManager() throws SQLException {
 	// The ODBC Data Source Name (DSN) is example
 	//String url = "jdbc:odbc:example";
-	String url = "jdbc:mysql://kc-sce-appdb01.kc.umkc.edu/jgkp9";
+	String url = "jdbc:mysql://kc-sce-appdb01.kc.umkc.edu/jgkp9?allowMultiQueries=true";
 	String userID = "jgkp9";
 	String password = "java";
 
@@ -34,6 +36,7 @@ public class accountManager {
 
 	con = DriverManager.getConnection(url, userID, password);
 	stmt = con.createStatement();
+	createTables();
     }
 
     public void cleanup() throws SQLException {
@@ -73,28 +76,50 @@ public class accountManager {
 	stmt.executeUpdate(credit.createSQLInitString());
 	stmt.executeUpdate(child.createSQLInitString());
 
-	accountData = new Object[]{savings, checking,
+	accountData = new bankAccount[]{savings, checking,
 	    credit, child};
+	numberOfAccounts = 4;
+
+	updateDisplayData();
 
     }
 
-    public boolean transferFunds(int fromAcct, int toAcct, int amount) {
-	bankAccount toObject, fromObject;
-	toObject = (bankAccount) accountData[toAcct];
-	fromObject = (bankAccount) accountData[fromAcct];
-	if (fromObject.balance > amount) {
-	    fromObject.balance -= amount;
-	    toObject.balance += amount;
-	    accountData[fromAcct] = fromObject;
-	    accountData[toAcct] = toObject;
+    public boolean transferFunds(int toAcct, int fromAcct, int amount) {
+	if (accountData[fromAcct].balance > amount) {
+	    accountData[fromAcct].balance -= amount;
+	    accountData[toAcct].balance += amount;
+	    accountData[fromAcct].changeFlag = true;
+	    accountData[toAcct].changeFlag = true;
 	    updateTable();
+	    updateDisplayData();
 	    return true;
 	}
 	return false;
     }
 
-    public void updateTable() {
+    public void updateDisplayData() {
+	displayData = new Object[numberOfAccounts][];
+	bankAccount tempAccount;
+	for (int i = 0; i < numberOfAccounts; i++) {
+	    displayData[i] = accountData[i].provideData();
+	}
 
+    }
+
+    public void updateTable() {
+	try {
+
+	    for (int i = 0; i < numberOfAccounts; i++) {
+		if (accountData[i].changeFlag == true) {
+		    stmt.addBatch(accountData[i].createSQLUpdateString());
+		    accountData[i].changeFlag = false;
+		}
+	    }
+	    stmt.executeBatch();
+	}
+	catch (SQLException sqlE) {
+	    System.err.println("Unable to update database");
+	}
     }
 
     public void getTable() throws SQLException {
