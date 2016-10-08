@@ -1,0 +1,43 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author jack
+ */
+public class bankAccount {
+
+    protected int idNumber = 0;
+    protected String accountName = "";
+    protected int balance = 0;
+
+    public bankAccount(int newID, String newName, int newMoney) {
+	idNumber = newID;
+	accountName = newName;
+	balance = newMoney;
+    }
+
+    protected String createSQLInitString() {
+	String combinedString = "INSERT INTO Accounts VALUES("
+		+ Integer.toString(idNumber) + ",'" + accountName
+		+ "', " + Integer.toString(balance) + ")";
+
+	return combinedString;
+
+    }
+
+    protected Object[] provideData() {
+
+	//initData = new Object[][] {
+	//    {new Integer(3), "Savings", new Integer(500)},
+	//    {new Integer(4), "Checking", new Integer(270)}
+	// };
+	Object[] accountAsObject = {idNumber, accountName, balance};
+	return accountAsObject;
+
+    }
+
+}
