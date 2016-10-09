@@ -9,13 +9,14 @@
  * @author jack
  */
 import java.sql.*;
+import java.util.*;
 
 public class accountManager {
 
     private Connection con;
     private Statement stmt;
     private int numberOfAccounts;
-    private bankAccount[] accountData;
+    private ArrayList<bankAccount> accountData;
     public Object[][] displayData;
 
     // Load class and create a connection to the database
@@ -34,9 +35,11 @@ public class accountManager {
 	    System.exit(0);
 	}
 
+	accountData = new ArrayList<bankAccount>();
 	con = DriverManager.getConnection(url, userID, password);
 	stmt = con.createStatement();
-	createTables();
+	getTable();
+//	createTables();
     }
 
     public void cleanup() throws SQLException {
@@ -76,24 +79,33 @@ public class accountManager {
 	stmt.executeUpdate(credit.createSQLInitString());
 	stmt.executeUpdate(child.createSQLInitString());
 
-	accountData = new bankAccount[]{savings, checking,
-	    credit, child};
-	numberOfAccounts = 4;
+	accountData.add(savings);
+	accountData.add(checking);
+	accountData.add(credit);
+	accountData.add(child);
+
+	numberOfAccounts = accountData.size();
 
 	updateDisplayData();
 
     }
 
     public boolean transferFunds(int toAcct, int fromAcct, int amount) {
-	if (accountData[fromAcct].balance > amount) {
-	    accountData[fromAcct].balance -= amount;
-	    accountData[toAcct].balance += amount;
-	    accountData[fromAcct].changeFlag = true;
-	    accountData[toAcct].changeFlag = true;
-	    updateTable();
-	    updateDisplayData();
-	    return true;
+	try {
+	    if (accountData.get(fromAcct).balance > amount) {
+		accountData.get(fromAcct).balance -= amount;
+		accountData.get(toAcct).balance += amount;
+		accountData.get(fromAcct).changeFlag = true;
+		accountData.get(toAcct).changeFlag = true;
+		updateTable();
+		updateDisplayData();
+		return true;
+	    }
 	}
+	catch (Exception e) {
+	    return false;
+	}
+
 	return false;
     }
 
@@ -101,7 +113,7 @@ public class accountManager {
 	displayData = new Object[numberOfAccounts][];
 	bankAccount tempAccount;
 	for (int i = 0; i < numberOfAccounts; i++) {
-	    displayData[i] = accountData[i].provideData();
+	    displayData[i] = accountData.get(i).provideData();
 	}
 
     }
@@ -110,9 +122,9 @@ public class accountManager {
 	try {
 
 	    for (int i = 0; i < numberOfAccounts; i++) {
-		if (accountData[i].changeFlag == true) {
-		    stmt.addBatch(accountData[i].createSQLUpdateString());
-		    accountData[i].changeFlag = false;
+		if (accountData.get(i).changeFlag == true) {
+		    stmt.addBatch(accountData.get(i).createSQLUpdateString());
+		    accountData.get(i).changeFlag = false;
 		}
 	    }
 	    stmt.executeBatch();
@@ -124,11 +136,32 @@ public class accountManager {
 
     public void getTable() throws SQLException {
 
+	accountData.clear();
+
 	String getCommand = "SELECT * FROM Accounts";
 	ResultSet rs = stmt.executeQuery(getCommand);
 
-	displayResultSet(rs);
+	ResultSetMetaData rsmd = rs.getMetaData();
 
+	int numCols = rsmd.getColumnCount();
+
+	boolean more = rs.next();
+	int number;
+	String name;
+	int amount;
+	while (more) {
+	    number = rs.getInt("AcctID");
+	    name = rs.getString("AcctName");
+	    amount = rs.getInt("Balance");
+
+	    accountData.add(new bankAccount(number, name, amount));
+
+	    more = rs.next();
+	}
+
+	numberOfAccounts = accountData.size();
+
+	updateDisplayData();
     }
 
     public void displayResultSet(ResultSet rs) {

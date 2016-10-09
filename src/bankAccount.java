@@ -37,10 +37,6 @@ public class bankAccount {
 
     protected Object[] provideData() {
 
-	//initData = new Object[][] {
-	//    {new Integer(3), "Savings", new Integer(500)},
-	//    {new Integer(4), "Checking", new Integer(270)}
-	// };
 	Object[] accountAsObject = {idNumber, accountName, balance};
 	return accountAsObject;
 

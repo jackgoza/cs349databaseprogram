@@ -141,7 +141,7 @@ public class AccountTransactionLayout extends JFrame {
 		    }
 		}
 		catch (NumberFormatException NFE) {
-		    JOptionPane.showMessageDialog(null, e.toString(), "Error",
+		    JOptionPane.showMessageDialog(null, "Only integers accepted, please try again", "Error",
 			    JOptionPane.ERROR_MESSAGE);
 		}
 	    }
